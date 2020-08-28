@@ -7,6 +7,9 @@
 const char ssid[] = "";
 const char pass[] = "";
 
+int blinky = 0;
+int blinky_count = 0;
+
 //const char* mqttServer = "192.168.0.16";
 const char* mqttServer = "rnddevmqttvpn.westeurope.azurecontainer.io";
 
@@ -78,6 +81,7 @@ void setup() {
   clientPub.setServer(mqttServer, mqttPort);
   clientPub.setCallback(callback);
 
+  pinMode(22, OUTPUT);
 
   connect();
   Serial.print("Subscribing\n");
@@ -126,6 +130,24 @@ void loop() {
    Serial.print("Send...\n");
     clientPub.publish("/hello", "world from oxford");
     lastMillis = millis();
+    digitalWrite(22, (blinky ^= 1)?HIGH:LOW);
+    blinky_count ++;
+     char str[32];
+    sprintf(str,"%d", blinky_count);
+
+    
+    String topic = WiFi.macAddress();
+    topic.replace(':','-');
+
+    topic += "/blinky/count";
+    clientPub.publish(topic.c_str(), str);
+
+    sprintf(str,"%d", blinky);
+    topic = WiFi.macAddress();
+    topic.replace(':','-');
+    topic += "/blinky/status";
+    clientPub.publish(topic.c_str(), str);
+
     }
     
    server.handleClient();

@@ -10,6 +10,9 @@ const char pass[] = "";
 int blinky = 0;
 int blinky_count = 0;
 
+int blinky2 = 0;
+int blinky2_count = 0;
+
 //const char* mqttServer = "192.168.0.16";
 const char* mqttServer = "rnddevmqttvpn.westeurope.azurecontainer.io";
 
@@ -82,10 +85,11 @@ void setup() {
   clientPub.setCallback(callback);
 
   pinMode(22, OUTPUT);
+  pinMode(23, OUTPUT);
 
   connect();
   Serial.print("Subscribing\n");
-  if(clientPub.subscribe("testing")) {
+  if(clientPub.subscribe("24-6F-28-AB-2D-54/command")) {
     Serial.print("Subscribing OK\n");
   }
 
@@ -98,6 +102,22 @@ void setup() {
 
 }
 
+void post() {
+      char str[32];
+    sprintf(str,"%d", blinky2_count);
+    String topic = WiFi.macAddress();
+    topic.replace(':','-');
+
+    topic += "/blinky2/count";
+    clientPub.publish(topic.c_str(), str);
+
+    sprintf(str,"%d", blinky2);
+    topic = WiFi.macAddress();
+    topic.replace(':','-');
+    topic += "/blinky2/status";
+    clientPub.publish(topic.c_str(), str);
+
+}
 
 void callback(char* topic, byte* payload, unsigned int length) {
  
@@ -109,6 +129,19 @@ void callback(char* topic, byte* payload, unsigned int length) {
     Serial.print((char)payload[i]);
   }
  
+  if( payload[0] == '0' ) {
+    blinky2 = 0;
+  } else {
+    blinky2 = 1;
+  }
+  
+
+  digitalWrite(23, (blinky2)?HIGH:LOW);
+  blinky2_count++;
+
+
+  post();
+
   Serial.println();
   Serial.println("-----------------------");
  
